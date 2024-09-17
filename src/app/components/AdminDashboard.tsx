@@ -19,11 +19,11 @@ const AdminDashboard: React.FC = () => {
   const [stars, setStars] = useState(0);
   const [imageSize, setImageSize] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ;
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const response = await axios.get('/api/feedback');
+        const response = await axios.get(`${apiUrl}/api/feedback`);
         setFeedbacks(response.data);
       } catch (error) {
         console.error('Error fetching feedback:', error);
@@ -35,7 +35,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete('/api/feedback', { data: { id } });
+      await axios.delete(`${apiUrl}/api/feedback`, { data: { id } });
       setFeedbacks(feedbacks.filter((feedback) => feedback.id !== id));
     } catch (error) {
       console.error('Error deleting feedback:', error);
@@ -55,7 +55,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       try {
-        await axios.put('/api/feedback', formData);
+        await axios.put(`${apiUrl}/api/feedback`, formData);
         setFeedbacks(feedbacks.map((fb) =>
           fb.id === selectedFeedback.id ? { ...fb, name, feedback, stars, imageSize, profileImage: profileImage?.name || fb.imageUrl } : fb
         ));
