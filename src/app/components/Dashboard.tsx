@@ -16,14 +16,14 @@ const Dashboard: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const { register, handleSubmit, reset, setValue } = useForm();
   const [message, setMessage] = useState('');
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL 
   useEffect(() => {
     fetchProjects();
   }, []);
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('/api/projects');
+      const response = await fetch(`${apiUrl}/api/projects`);
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setProjects(data);
@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
         formData.append('image', data.image[0]);
       }
 
-      const response = await fetch('/api/projects', {
+      const response = await fetch(`${apiUrl}/api/projects`, {
         method: editingProject ? 'PUT' : 'POST',
         headers: {
           'Authorization': 'Basic ' + btoa('admin:password')
@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
 
   const deleteProject = async (id: number) => {
     try {
-      const response = await fetch(`/api/projects?id=${id}`, {
+      const response = await fetch(`${apiUrl}/api/projects?id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': 'Basic ' + btoa('admin:password')

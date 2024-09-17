@@ -12,11 +12,11 @@ interface Project {
 
 const ProjectsSection: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/projects');
+        const response = await fetch(`${apiUrl}/api/projects`);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         setProjects(data);

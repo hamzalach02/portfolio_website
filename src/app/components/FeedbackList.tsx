@@ -19,11 +19,11 @@ const FeedbackList: React.FC = () => {
   const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL; 
   const fetchFeedback = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/feedback');
+      const res = await fetch(`${apiUrl}/api/feedback`);
       if (!res.ok) {
         throw new Error('Failed to fetch feedback');
       }

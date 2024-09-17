@@ -17,7 +17,7 @@ const FeedbackForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [imageAspect, setImageAspect] = useState(1);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL 
   const imgRef = useRef<HTMLImageElement | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -108,7 +108,7 @@ const FeedbackForm: React.FC = () => {
         formData.append('profileImage', croppedImageBlob, 'profile.jpg');
       }
 
-      const response = await fetch('/api/feedback', {
+      const response = await fetch(`${apiUrl}/api/feedback`, {
         method: 'POST',
         body: formData,
       });
