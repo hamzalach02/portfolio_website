@@ -57,7 +57,7 @@ const AdminDashboard: React.FC = () => {
       try {
         await axios.put('/api/feedback', formData);
         setFeedbacks(feedbacks.map((fb) =>
-          fb.id === selectedFeedback.id ? { ...fb, name, feedback, stars, imageSize, profileImage: profileImage?.name || fb.profileImage } : fb
+          fb.id === selectedFeedback.id ? { ...fb, name, feedback, stars, imageSize, profileImage: profileImage?.name || fb.imageUrl } : fb
         ));
         setSelectedFeedback(null);
       } catch (error) {

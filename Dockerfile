@@ -11,6 +11,7 @@ RUN npm ci
 
 # Copy the rest of the application
 COPY . .
+COPY .env .env
 
 # Build the Next.js app
 RUN npm run build
@@ -20,7 +21,7 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Install the production dependencies
+# Install only production dependencies
 COPY --from=builder /app/package*.json ./
 RUN npm ci --only=production
 
@@ -29,14 +30,10 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
 # Ensure directories for images exist
-RUN mkdir -p /app/public/projectImages
-RUN mkdir -p /app/public/uploads
+RUN mkdir -p /app/public/projectImages /app/public/uploads
 
-# Expose the port that the Next.js app runs on
+# Expose the port the Next.js app runs on
 EXPOSE 3000
 
 # Start the Next.js app
 CMD ["npm", "run", "start"]
-
-
-
