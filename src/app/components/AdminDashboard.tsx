@@ -7,7 +7,7 @@ interface Feedback {
   name: string;
   feedback: string;
   stars: number;
-  profileImage: string | null;
+  imageUrl: string | null;
   imageSize: number;
 }
 
@@ -88,8 +88,8 @@ const AdminDashboard: React.FC = () => {
               <td className="border-b px-4 py-2">{fb.feedback}</td>
               <td className="border-b px-4 py-2">{fb.stars}</td>
               <td className="border-b px-4 py-2">
-                {fb.profileImage ? (
-                  <img src={`/uploads/${fb.profileImage}`} alt="Profile" className="w-16 h-16 object-cover" />
+                {fb.imageUrl ? (
+                  <img src={`${fb.imageUrl}`} alt="Profile" className="w-16 h-16 object-cover" />
                 ) : (
                   'No Image'
                 )}

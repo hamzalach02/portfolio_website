@@ -9,10 +9,11 @@ interface Feedback {
   feedback: string;
   stars: number;
   profileImage: string | null;
+  imageUrl: string | null; // Add this line
 }
 
-const PROFILE_IMAGE_SIZE = 100; // Consistent size for all profile images
-const REFRESH_INTERVAL = 30000; // Refresh every 30 seconds
+const PROFILE_IMAGE_SIZE = 100;
+const REFRESH_INTERVAL = 30000;
 
 const FeedbackList: React.FC = () => {
   const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
@@ -66,9 +67,9 @@ const FeedbackList: React.FC = () => {
             <div key={feedback.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-[1px] border-indigo-600 dark:border-gray-100">
               <div className="p-6 flex flex-col items-start">
                 <div className="relative w-[100px] h-[100px] mb-4">
-                  {feedback.profileImage ? (
+                  {feedback.imageUrl ? ( // Use imageUrl instead of profileImage
                     <Image
-                      src={feedback.profileImage?`/uploads/${feedback.profileImage}`:'/default.png'}
+                      src={feedback.imageUrl}
                       alt={`${feedback.name}'s profile`}
                       width={PROFILE_IMAGE_SIZE}
                       height={PROFILE_IMAGE_SIZE}

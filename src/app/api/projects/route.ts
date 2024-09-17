@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 import path from 'path';
-import { writeFile, mkdir, unlink } from 'fs/promises';
+import { Readable } from 'stream';
+import minioClient from '@/lib/minio';
+
 
 const dbPath = path.join(process.cwd(), 'projects.db');
-const imageDirPath = path.join(process.cwd(), 'public', 'projectImages');
+const bucketName = 'portfolio'; // Use your MinIO bucket name
 
 async function openDb() {
   return open({
@@ -32,8 +34,17 @@ async function initDb() {
 // Initialize the database
 initDb();
 
-// Ensure project images directory exists
-mkdir(imageDirPath, { recursive: true }).catch(console.error);
+// Ensure the MinIO bucket exists
+(async () => {
+  try {
+    const exists = await minioClient.bucketExists(bucketName);
+    if (!exists) {
+      await minioClient.makeBucket(bucketName, 'us-east-1');
+    }
+  } catch (error) {
+    console.error('Error ensuring bucket exists:', error);
+  }
+})();
 
 function checkAuth(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -51,8 +62,18 @@ function checkAuth(req: NextRequest) {
 export async function GET() {
   const db = await openDb();
   const projects = await db.all('SELECT * FROM projects');
+  
+  // Generate presigned URLs for each image
+  const projectsWithUrls = await Promise.all(projects.map(async (project) => {
+    if (project.image) {
+      const url = await minioClient.presignedGetObject(bucketName, project.image, 24 * 60 * 60); // 24 hours expiry
+      return { ...project, imageUrl: url };
+    }
+    return project;
+  }));
+
   await db.close();
-  return NextResponse.json(projects);
+  return NextResponse.json(projectsWithUrls);
 }
 
 export async function POST(req: NextRequest) {
@@ -73,23 +94,25 @@ export async function POST(req: NextRequest) {
 
   const buffer = await imageFile.arrayBuffer();
   const filename = Date.now() + '-' + imageFile.name.replace(/\s/g, '-');
-  const imagePath = path.join(imageDirPath, filename);
-  const relativeImagePath = `/projectImages/${filename}`;
+  const stream = Readable.from(Buffer.from(buffer));
 
-  await writeFile(imagePath, Buffer.from(buffer));
+  await minioClient.putObject(bucketName, filename, stream);
 
   const db = await openDb();
   const result = await db.run(
     'INSERT INTO projects (title, description, image, github, live) VALUES (?, ?, ?, ?, ?)',
-    [title, description, relativeImagePath, github, live]
+    [title, description, filename, github, live]
   );
   await db.close();
+
+  const imageUrl = await minioClient.presignedGetObject(bucketName, filename, 24 * 60 * 60);
 
   return NextResponse.json({
     id: result.lastID,
     title,
     description,
-    image: relativeImagePath,
+    image: filename,
+    imageUrl,
     github,
     live,
   }, { status: 201 });
@@ -109,33 +132,34 @@ export async function PUT(req: NextRequest) {
   const imageFile = formData.get('image') as File | null;
 
   const db = await openDb();
-  let relativeImagePath;
+  let filename;
 
   if (imageFile) {
     const buffer = await imageFile.arrayBuffer();
-    const filename = Date.now() + '-' + imageFile.name.replace(/\s/g, '-');
-    const imagePath = path.join(imageDirPath, filename);
-    relativeImagePath = `/projectImages/${filename}`;
+    filename = Date.now() + '-' + imageFile.name.replace(/\s/g, '-');
+    const stream = Readable.from(Buffer.from(buffer));
 
-    await writeFile(imagePath, Buffer.from(buffer));
+    await minioClient.putObject(bucketName, filename, stream);
 
     // Delete old image
     const oldProject = await db.get('SELECT image FROM projects WHERE id = ?', id);
     if (oldProject && oldProject.image) {
-      const oldImagePath = path.join(process.cwd(), 'public', oldProject.image);
-      await unlink(oldImagePath).catch(console.error);
+      await minioClient.removeObject(bucketName, oldProject.image).catch(console.error);
     }
   }
 
   const result = await db.run(
-    'UPDATE projects SET title = ?, description = ?, github = ?, live = ?' + (relativeImagePath ? ', image = ?' : '') + ' WHERE id = ?',
-    [title, description, github, live, ...(relativeImagePath ? [relativeImagePath] : []), id]
+    'UPDATE projects SET title = ?, description = ?, github = ?, live = ?' + (filename ? ', image = ?' : '') + ' WHERE id = ?',
+    [title, description, github, live, ...(filename ? [filename] : []), id]
   );
 
   const updatedProject = await db.get('SELECT * FROM projects WHERE id = ?', id);
   await db.close();
 
   if (result?.changes && result.changes > 0) {
+    if (updatedProject.image) {
+      updatedProject.imageUrl = await minioClient.presignedGetObject(bucketName, updatedProject.image, 24 * 60 * 60);
+    }
     return NextResponse.json(updatedProject);
   } else {
     return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -160,8 +184,7 @@ export async function DELETE(req: NextRequest) {
   const project = await db.get('SELECT * FROM projects WHERE id = ?', id);
   
   if (project && project.image) {
-    const imagePath = path.join(process.cwd(), 'public', project.image);
-    await unlink(imagePath).catch(console.error);
+    await minioClient.removeObject(bucketName, project.image).catch(console.error);
   }
 
   const result = await db.run('DELETE FROM projects WHERE id = ?', id);

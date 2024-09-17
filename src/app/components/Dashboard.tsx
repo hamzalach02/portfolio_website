@@ -6,7 +6,7 @@ interface Project {
   id: number;
   title: string;
   description: string;
-  image: string;
+  imageUrl: string;
   github: string;
   live: string;
 }
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{project.title}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">{project.description.substring(0, 100)}...</td>
                 <td className="px-6 py-4">
-                  <img src={project.image} alt={project.title} className="h-12 w-12 object-cover rounded-md" />
+                  <img src={project.imageUrl} alt={project.title} className="h-12 w-12 object-cover rounded-md" />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button onClick={() => startEditing(project)} className="text-indigo-600 hover:text-indigo-800 mr-4">Edit</button>
