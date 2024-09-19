@@ -28,7 +28,7 @@ const FeedbackList: React.FC = () => {
         throw new Error('Failed to fetch feedback');
       }
       const data = await res.json();
-      console.log('data : ',data)
+      
       setFeedbackList(data);
     } catch (err) {
       setError('Error fetching feedback. Please try again later.');
@@ -69,9 +69,9 @@ const FeedbackList: React.FC = () => {
               <div className="p-6 flex flex-col items-start">
                 <div className="relative w-[100px] h-[100px] mb-4">
                   {feedback.profileImage ? ( // Use imageUrl instead of profileImage
-                    <Image
+                    <img
                       src={feedback.profileImage}
-                      alt={`${feedback.name}'s profile`}
+                      alt={` profile`}
                       width={PROFILE_IMAGE_SIZE}
                       height={PROFILE_IMAGE_SIZE}
                       className="rounded-full object-cover border-4 border-gradient-to-r from-indigo-500 to-purple-600 shadow-lg"

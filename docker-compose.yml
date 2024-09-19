@@ -1,0 +1,14 @@
+version: '3'
+services:
+  portfolio:
+    build:
+      context: .
+    image: portfolio
+    ports:
+      - "3001:3001"
+    environment:
+      EDGE_STORE_ACCESS_KEY: ${EDGE_STORE_ACCESS_KEY}
+      EDGE_STORE_SECRET_KEY: ${EDGE_STORE_SECRET_KEY}
+    env_file:
+      - .env
+    restart: always
