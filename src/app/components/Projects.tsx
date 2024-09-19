@@ -12,11 +12,11 @@ interface Project {
 
 const ProjectsSection: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+ 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/projects`);
+        const response = await fetch(`/api/projects`);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         setProjects(data);
@@ -39,7 +39,7 @@ const ProjectsSection: React.FC = () => {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, index) => (
             <div key={index} className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md flex flex-col h-full">
-              <img src={project.imageUrl} alt={project.title} className="w-full h-48 object-cover rounded-t-lg" />
+              <img src={`${project.imageUrl}`} alt={project.title} className="w-full h-48 object-cover rounded-t-lg" />
               <div className="flex-1 p-6">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{project.title}</h3>
                 <p className="mt-2 text-gray-600 dark:text-gray-300">{project.description}</p>

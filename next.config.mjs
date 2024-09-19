@@ -1,15 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-        remotePatterns: [
-          {
-            protocol: 'http',
-            hostname: '74.50.127.200',
-            port: '9000',
-            pathname: '/portfolio/**',
-          },
-        ],
+   
+      webpack: (config, { isServer }) => {
+        if (!isServer) {
+          config.resolve.fallback.fs = false;
+        }
+        return config;
       },
+    
+      images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '**',
+                port: '',
+                pathname: '**',
+            },
+        ],
+    },
+    
 };
 
 export default nextConfig;

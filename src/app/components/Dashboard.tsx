@@ -1,4 +1,5 @@
 "use client";
+import { useEdgeStore } from '@/lib/edgestore';
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -16,14 +17,16 @@ const Dashboard: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const { register, handleSubmit, reset, setValue } = useForm();
   const [message, setMessage] = useState('');
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+  const [file, setFile] = useState<File>();
+  const { edgestore } = useEdgeStore();
+  
   useEffect(() => {
     fetchProjects();
   }, []);
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/projects`);
+      const response = await fetch(`/api/projects`);
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setProjects(data);
@@ -34,6 +37,18 @@ const Dashboard: React.FC = () => {
 
   const onSubmit = async (data: any) => {
     try {
+      let imageUrl = editingProject?.imageUrl || '';
+
+      if (file) {
+        const res = await edgestore.publicFiles.upload({
+          file,
+          onProgressChange: (progress) => {
+            console.log(progress);
+          },
+        });
+        imageUrl = res.url;
+      }
+
       const formData = new FormData();
       if (editingProject) {
         formData.append('id', editingProject.id.toString());
@@ -42,11 +57,9 @@ const Dashboard: React.FC = () => {
       formData.append('description', data.description);
       formData.append('github', data.github);
       formData.append('live', data.live);
-      if (data.image && data.image[0]) {
-        formData.append('image', data.image[0]);
-      }
+      formData.append('imageUrl', imageUrl);
 
-      const response = await fetch(`${apiUrl}/api/projects`, {
+      const response = await fetch(`/api/projects`, {
         method: editingProject ? 'PUT' : 'POST',
         headers: {
           'Authorization': 'Basic ' + btoa('admin:password')
@@ -58,6 +71,7 @@ const Dashboard: React.FC = () => {
         setMessage(editingProject ? 'Project updated successfully!' : 'Project added successfully!');
         reset();
         setEditingProject(null);
+        setFile(undefined);
         fetchProjects();
       } else {
         throw new Error('Failed to add/update project');
@@ -69,7 +83,7 @@ const Dashboard: React.FC = () => {
 
   const deleteProject = async (id: number) => {
     try {
-      const response = await fetch(`${apiUrl}/api/projects?id=${id}`, {
+      const response = await fetch(`/api/projects?id=${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': 'Basic ' + btoa('admin:password')
@@ -93,6 +107,13 @@ const Dashboard: React.FC = () => {
     setValue('description', project.description);
     setValue('github', project.github);
     setValue('live', project.live);
+    setFile(undefined);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
   };
 
   return (
@@ -109,7 +130,7 @@ const Dashboard: React.FC = () => {
         </div>
         <div>
           <label htmlFor="image" className="block text-lg font-medium text-gray-700">Project Image</label>
-          <input type="file" id="image" {...register('image')} accept="image/*" className="mt-1 block w-full" />
+          <input type="file" id="image" onChange={handleFileChange} accept="image/*" className="mt-1 block w-full" />
         </div>
         <div>
           <label htmlFor="github" className="block text-lg font-medium text-gray-700">GitHub URL</label>

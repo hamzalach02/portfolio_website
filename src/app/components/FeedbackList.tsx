@@ -19,15 +19,16 @@ const FeedbackList: React.FC = () => {
   const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL; 
+  
   const fetchFeedback = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${apiUrl}/api/feedback`);
+      const res = await fetch(`/api/feedback`);
       if (!res.ok) {
         throw new Error('Failed to fetch feedback');
       }
       const data = await res.json();
+      console.log('data : ',data)
       setFeedbackList(data);
     } catch (err) {
       setError('Error fetching feedback. Please try again later.');
@@ -67,9 +68,9 @@ const FeedbackList: React.FC = () => {
             <div key={feedback.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-[1px] border-indigo-600 dark:border-gray-100">
               <div className="p-6 flex flex-col items-start">
                 <div className="relative w-[100px] h-[100px] mb-4">
-                  {feedback.imageUrl ? ( // Use imageUrl instead of profileImage
+                  {feedback.profileImage ? ( // Use imageUrl instead of profileImage
                     <Image
-                      src={feedback.imageUrl}
+                      src={feedback.profileImage}
                       alt={`${feedback.name}'s profile`}
                       width={PROFILE_IMAGE_SIZE}
                       height={PROFILE_IMAGE_SIZE}
